@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ESTADOS, SERVICIOS, getEstadoColor, getEstadoEmoji } from '../../lib/estados'
+import { notificarCambioEstado } from '../../lib/notificaciones'
 
 export default function Ordenes() {
   const [ordenes, setOrdenes] = useState([])
@@ -54,8 +55,12 @@ export default function Ordenes() {
   async function cambiarEstado(ordenId, nuevoEstado) {
     setActualizando(ordenId)
     await supabase.from('ordenes').update({ estado: nuevoEstado }).eq('id', ordenId)
+    const orden = ordenes.find(o => o.id === ordenId)
     setOrdenes(prev => prev.map(o => o.id === ordenId ? { ...o, estado: nuevoEstado } : o))
     setActualizando(null)
+    if (orden?.cliente_id && orden?.vehiculos?.placa) {
+      notificarCambioEstado(orden.cliente_id, orden.vehiculos.placa, nuevoEstado)
+    }
   }
 
   const filtradas = ordenes.filter(o => {

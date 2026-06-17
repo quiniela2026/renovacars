@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { initOneSignal, loginOneSignal, logoutOneSignal, requestNotificationPermission } from './onesignal'
 
 const AuthContext = createContext(null)
 
@@ -9,17 +10,28 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    initOneSignal()
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) {
+        fetchProfile(session.user.id)
+        loginOneSignal(session.user.id)
+      }
       else setLoading(false)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        if (event === 'SIGNED_IN') await ensureProfile(session.user)
+        if (event === 'SIGNED_IN') {
+          await ensureProfile(session.user)
+          loginOneSignal(session.user.id)
+        }
         fetchProfile(session.user.id)
-      } else { setProfile(null); setLoading(false) }
+      } else {
+        setProfile(null)
+        setLoading(false)
+        logoutOneSignal()
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -59,10 +71,13 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  async function signOut() { await supabase.auth.signOut() }
+  async function signOut() {
+    await logoutOneSignal()
+    await supabase.auth.signOut()
+  }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, requestNotificationPermission }}>
       {children}
     </AuthContext.Provider>
   )

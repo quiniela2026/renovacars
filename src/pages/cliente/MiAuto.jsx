@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/AuthContext'
 import { ESTADOS, getEstadoColor, getEstadoEmoji, getEstadoIndex } from '../../lib/estados'
+import { requestNotificationPermission } from '../../lib/onesignal'
 
 export default function MiAuto() {
   const { user, profile } = useAuth()
@@ -43,6 +44,13 @@ export default function MiAuto() {
     <div className="page">
       <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 2 }}>Bienvenido</div>
       <div className="sec-title">{profile?.nombre} <span>👋</span></div>
+
+      <button onClick={() => requestNotificationPermission()} style={{
+        background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text2)',
+        borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, marginBottom: 16, cursor: 'pointer'
+      }}>
+        🔔 Activar notificaciones de mi vehículo
+      </button>
 
       {vehiculos.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: 40 }}>
