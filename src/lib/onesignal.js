@@ -1,19 +1,19 @@
 // Inicialización de OneSignal Web Push
 const ONESIGNAL_APP_ID = '46934893-f039-47b4-856b-c42026eb1792'
 
-let initialized = false
+let scriptLoaded = false
 
 export function initOneSignal() {
-  if (initialized) return
-  initialized = true
+  if (scriptLoaded) return
+  scriptLoaded = true
 
   window.OneSignalDeferred = window.OneSignalDeferred || []
   window.OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
-      safari_web_id: undefined,
-      notifyButton: { enable: false },
       allowLocalhostAsSecureOrigin: true,
+      serviceWorkerParam: { scope: '/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js',
     })
   })
 
